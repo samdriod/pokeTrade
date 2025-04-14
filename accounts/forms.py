@@ -31,7 +31,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].help_text = 'Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
+        self.fields['username'].help_text = 'Required'
         self.fields['password1'].help_text = 'Your password must contain at least 8 characters.'
 
 class UserProfileForm(forms.ModelForm):

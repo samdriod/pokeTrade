@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="mb-6 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Full Card Dex</h1>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                    </svg>
+                    Collected: {{ collected_count|default:"0" }}/{{ cards|length }}
+                </span>
+            </div>
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                    <svg class="mr-1.5 h-2 w-2 text-pink-400" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                    </svg>
+                    Wishlist: {{ wishlist_count|default:"0" }}/{{ cards|length }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white shadow sm:rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="get" class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="text" name="search" id="search" value="{{ search_query }}"
+                                   class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="Search cards...">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <select name="rarity" class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">All Rarities</option>
+                        {% for rarity in rarities %}
+                            <option value="{{ rarity }}" {% if rarity == selected_rarity %}selected{% endif %}>{{ rarity }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="type" class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">All Types</option>
+                        {% for type in types %}
+                            <option value="{{ type }}" {% if type == selected_type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+        {% for card in cards %}
+            <div class="relative bg-white rounded-lg shadow overflow-hidden group">
+                <!-- Card Number -->
+                <div class="absolute top-2 left-2 z-10">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                        #{{ forloop.counter|stringformat:"03d" }}
+                    </span>
+                </div>
+                
+                <!-- Card Image -->
+                <div class="relative aspect-w-3 aspect-h-4">
+                    <img src="{{ card.image_url }}" alt="{{ card.name }}" 
+                         class="w-full h-full object-center object-cover">
+                </div>
+
+                <!-- Card Actions -->
+                <div class="absolute bottom-2 left-2 right-2 flex justify-between">
+                    <button type="button" 
+                            class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <button type="button"
+                            class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full text-center py-12">
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No cards found</h3>
+                <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
