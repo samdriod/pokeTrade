@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Listing
 from offers.models import Offer
+from .forms import ListingForm
+import uuid
 
 def listing_list(request):
     listings = Listing.objects.filter(status='active').order_by('name')
@@ -32,3 +34,22 @@ def listing_detail(request, listing_id):
         except (ValueError, TypeError):
             messages.error(request, "Invalid offer amount.")
     return render(request, 'listings/listing_detail.html', {'listing': listing})
+
+@login_required
+def create_listing(request):
+    if request.method == 'POST':
+        form = ListingForm(request.POST)
+        if form.is_valid():
+            listing = form.save(commit=False)
+            listing.seller = request.user
+            listing.status = 'active'
+            # Generate unique card_id
+            listing.card_id = f"user-{uuid.uuid4().hex[:10]}"
+            listing.save()
+            messages.success(request, "Listing created successfully!")
+            return redirect('listing_list')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ListingForm()
+    return render(request, 'listings/create_listing.html', {'form': form})
