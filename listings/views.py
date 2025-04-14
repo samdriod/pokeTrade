@@ -1,14 +1,30 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from .models import Listing
 from offers.models import Offer
 from .forms import ListingForm
 import uuid
 
 def listing_list(request):
-    listings = Listing.objects.filter(status='active').order_by('name')
-    return render(request, 'listings/listings_list.html', {'listings': listings})
+    query = request.GET.get('q', '')
+    sort = request.GET.get('sort', 'price_asc')
+    listings = Listing.objects.filter(
+        Q(name__icontains=query) if query else Q(),
+        status='active'
+    )
+
+    if sort == 'price_asc':
+        listings = listings.order_by('price')
+    elif sort == 'price_desc':
+        listings = listings.order_by('-price')
+
+    return render(request, 'listings/listings_list.html', {
+        'listings': listings,
+        'query': query,
+        'sort': sort
+    })
 
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, id=listing_id)

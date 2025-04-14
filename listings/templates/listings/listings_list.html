@@ -10,6 +10,21 @@
             </a>
         </div>
         {% endif %}
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <!-- Search Form -->
+            <form method="get" class="flex items-center w-full sm:w-3/4">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search cards (e.g., Pikachu)" class="border rounded-l p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700">Search</button>
+            </form>
+            <!-- Sort Dropdown -->
+            <form method="get" class="flex items-center">
+                <input type="hidden" name="q" value="{{ query }}"> <!-- Preserve search query -->
+                <select name="sort" onchange="this.form.submit()" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                </select>
+            </form>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {% for listing in listings %}
                 <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
