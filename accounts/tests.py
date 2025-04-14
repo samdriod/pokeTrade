@@ -139,22 +139,38 @@ class EditProfileViewTest(TestCase):
 
 class PokedexViewTest(TestCase):
     def setUp(self):
-        self.client = Client()
+        # Create a test user and log them in
         self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client.login(username='testuser', password='testpass')  # Log in the test client
-        self.card1 = PokemonCard.objects.create(
+        self.client = Client()
+        self.client.login(username='testuser', password='testpass')
+
+        # Add some PokemonCard objects to the database
+        PokemonCard.objects.create(
             card_id="xy1-1",
             name="Venusaur-EX",
             supertype="Pokémon",
             rarity="Rare Holo EX",
+            set_name="XY",
+            set_series="XY",
             small_image="https://images.pokemontcg.io/xy1/1.png"
         )
-        self.card2 = PokemonCard.objects.create(
+        PokemonCard.objects.create(
             card_id="xy1-2",
             name="M Venusaur-EX",
             supertype="Pokémon",
             rarity="Rare Holo EX",
+            set_name="XY",
+            set_series="XY",
             small_image="https://images.pokemontcg.io/xy1/2.png"
+        )
+        PokemonCard.objects.create(
+            card_id="xy1-3",
+            name="Weedle",
+            supertype="Pokémon",
+            rarity="Common",
+            set_name="XY",
+            set_series="XY",
+            small_image="https://images.pokemontcg.io/xy1/3.png"
         )
 
     def test_pokedex_view(self):
@@ -163,3 +179,25 @@ class PokedexViewTest(TestCase):
         self.assertTemplateUsed(response, 'accounts/pokedex.html')
         self.assertContains(response, 'Venusaur-EX')
         self.assertContains(response, 'M Venusaur-EX')
+
+    def test_pokedex_view_search(self):
+        # Test searching for "Venusaur"
+        response = self.client.get(reverse('accounts:pokedex'), {'search': 'Venusaur'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Venusaur-EX')
+        self.assertContains(response, 'M Venusaur-EX')
+        self.assertNotContains(response, 'Weedle')  # Weedle should not appear in the results
+
+    def test_pokedex_view_search_no_results(self):
+        # Test searching for a term that doesn't match any cards
+        response = self.client.get(reverse('accounts:pokedex'), {'search': 'Charizard'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No cards found')  # Check for the "no results" message
+
+    def test_pokedex_view_no_search(self):
+        # Test accessing the pokedex without a search query
+        response = self.client.get(reverse('accounts:pokedex'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Venusaur-EX')
+        self.assertContains(response, 'M Venusaur-EX')
+        self.assertContains(response, 'Weedle')  # All cards should appear
