@@ -3,9 +3,8 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .models import UserProfile, PokemonCard
+from .models import UserProfile
 from .forms import CustomUserCreationForm, UserProfileForm
-from django.db import transaction
 
 def register(request):
     if request.user.is_authenticated:
@@ -15,27 +14,27 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             try:
-                with transaction.atomic():
-                    # Store birth_date and gender temporarily on the user instance
-                    user = form.save(commit=False)
-                    user._birth_date = form.cleaned_data.get('birth_date')
-                    user._gender = form.cleaned_data.get('gender')
-                    
-                    # Save the user, which will trigger the signal to create the profile
+                # Create the user first
+                user = form.save()
+                
+                # Get or create the profile
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                
+                # Update profile fields from form
+                profile.birth_date = form.cleaned_data.get('birth_date')
+                profile.gender = form.cleaned_data.get('gender')
+                if form.cleaned_data.get('email'):
+                    user.email = form.cleaned_data.get('email')
                     user.save()
-                    
-                    if form.cleaned_data.get('email'):
-                        user.email = form.cleaned_data.get('email')
-                        user.save()
-                    
-                    # Log the user in
-                    login(request, user)
-                    messages.success(request, 'Account created successfully!')
-                    return redirect('accounts:profile')
+                
+                # Save the profile
+                profile.save()
+                
+                # Log the user in
+                login(request, user)
+                messages.success(request, 'Account created successfully!')
+                return redirect('accounts:profile')
             except Exception as e:
-                # If anything goes wrong, make sure to delete the user if it was created
-                if 'user' in locals():
-                    user.delete()
                 messages.error(request, f'Error creating account: {str(e)}')
         else:
             for error in form.errors.values():
@@ -62,4 +61,4 @@ def edit_profile(request):
     else:
         form = UserProfileForm(instance=request.user.userprofile)
     
-    return render(request, 'accounts/edit_profile.html', {'form': form}) 
+    return render(request, 'accounts/edit_profile.html', {'form': form})

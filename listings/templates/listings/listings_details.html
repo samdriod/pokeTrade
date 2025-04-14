@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6">{{ listing.name }}</h1>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        {% if listing.image %}
+            <img src="{{ listing.image }}" alt="{{ listing.name }}" class="w-64 h-auto mb-4">
+        {% endif %}
+        <p class="text-gray-600">Price: ${{ listing.price }}</p>
+        <p class="text-gray-600">Condition: {{ listing.condition }}</p>
+        <p class="text-gray-600">Seller: {{ listing.seller.username }}</p>
+    </div>
+{% endblock %}
