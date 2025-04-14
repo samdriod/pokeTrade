@@ -7,6 +7,9 @@ from .models import UserProfile
 from .forms import CustomUserCreationForm
 
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('accounts:profile')  # Add namespace
+        
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -16,7 +19,7 @@ def register(request):
             user.userprofile.gender = form.cleaned_data['gender']
             user.userprofile.save()
             login(request, user)
-            return redirect('accounts:profile')
+            return redirect('accounts:profile')  # Add namespace
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})

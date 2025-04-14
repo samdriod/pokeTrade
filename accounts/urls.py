@@ -6,7 +6,11 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('register/', views.register, name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(
+        template_name='accounts/login.html',
+        redirect_authenticated_user=True,
+        next_page='accounts:profile'
+    ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(
         next_page='/',
         http_method_names=['post', 'get']
