@@ -18,7 +18,7 @@ def register(request):
                 gender=form.cleaned_data['gender']
             )
             login(request, user)
-            return redirect('home')  # Redirect to home page after registration
+            return redirect('accounts:profile')  # Redirect to profile page after registration
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
