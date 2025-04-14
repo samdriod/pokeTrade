@@ -3,6 +3,8 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+
+from offers.models import Offer
 from .models import UserProfile
 from .forms import CustomUserCreationForm, UserProfileForm
 from django.db import transaction
@@ -49,8 +51,10 @@ def register(request):
 
 @login_required
 def profile(request):
+    user_offers = Offer.objects.filter(buyer=request.user)
     return render(request, 'accounts/profile.html', {
-        'profile': request.user.userprofile
+        'profile': request.user.userprofile,
+        'offers': user_offers
     })
 
 @login_required
