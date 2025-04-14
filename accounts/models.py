@@ -15,8 +15,8 @@ class UserProfile(models.Model):
     nickname = models.CharField(max_length=30, blank=True)
     bio = models.TextField(max_length=500, blank=True)
     location = models.CharField(max_length=30, blank=True)
-    birth_date = models.DateField(null=True)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='', blank=True)
     reputation_score = models.IntegerField(default=0)
     trades_completed = models.IntegerField(default=0)
 
@@ -24,16 +24,11 @@ class UserProfile(models.Model):
         return f"{self.nickname or self.user.username}'s profile"
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Create a UserProfile instance when a new User is created."""
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    """Create or update a UserProfile instance when a User is saved."""
     if created:
+        # For new users, create profile
         UserProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """Ensure the UserProfile is saved when the User is saved."""
-    try:
-        instance.userprofile.save()
-    except UserProfile.DoesNotExist:
-        # Create profile if it doesn't exist
-        UserProfile.objects.create(user=instance)
+    else:
+        # For existing users, ensure profile exists
+        UserProfile.objects.get_or_create(user=instance)
