@@ -20,5 +20,5 @@ import debug_toolbar
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # Django admin interface
-    path('accounts/', include('pokeTrade.accounts.urls')),
+    path('accounts/', include('accounts.urls')),
 ]
