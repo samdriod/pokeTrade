@@ -19,5 +19,5 @@ from django.urls import include, path
 import debug_toolbar
 
 urlpatterns = [
-
+    path('accounts/', include('pokeTrade.accounts.urls')),
 ]
