@@ -7,3 +7,6 @@ listings/__pycache__
 listings/migrations/__pycache__
 listings/management/__pycache__
 listings/management/commands/__pycache__
+offers/__pycache__
+offers/migrations/__pycache__
+offers/management/__pycache__

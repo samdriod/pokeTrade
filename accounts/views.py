@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .models import UserProfile
 from .forms import CustomUserCreationForm, UserProfileForm
+from django.db import transaction
 
 def register(request):
     if request.user.is_authenticated:
@@ -14,27 +15,29 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             try:
-                # Create the user first
-                user = form.save()
-                
-                # Get or create the profile
-                profile, created = UserProfile.objects.get_or_create(user=user)
-                
-                # Update profile fields from form
-                profile.birth_date = form.cleaned_data.get('birth_date')
-                profile.gender = form.cleaned_data.get('gender')
-                if form.cleaned_data.get('email'):
-                    user.email = form.cleaned_data.get('email')
-                    user.save()
-                
-                # Save the profile
-                profile.save()
-                
-                # Log the user in
-                login(request, user)
-                messages.success(request, 'Account created successfully!')
-                return redirect('accounts:profile')
+                with transaction.atomic():
+                    # Create the user first
+                    user = form.save()
+                    
+                    # Update the user's profile
+                    profile = user.userprofile  # Profile is created by signal
+                    profile.birth_date = form.cleaned_data.get('birth_date')
+                    profile.gender = form.cleaned_data.get('gender')
+                    profile.save()
+                    
+                    # Update email if provided
+                    if form.cleaned_data.get('email'):
+                        user.email = form.cleaned_data.get('email')
+                        user.save()
+                    
+                    # Log the user in
+                    login(request, user)
+                    messages.success(request, 'Account created successfully!')
+                    return redirect('accounts:profile')
             except Exception as e:
+                # If anything goes wrong, make sure to delete the user if it was created
+                if 'user' in locals():
+                    user.delete()
                 messages.error(request, f'Error creating account: {str(e)}')
         else:
             for error in form.errors.values():
