@@ -41,15 +41,19 @@
                         </div>
                     {% endif %}
                     <h3 class="text-xl font-bold text-gray-800 mb-2">
-                        <a href="{% url 'listing_detail' listing.id %}"
-                           class="hover:text-indigo-600 transition-colors duration-200">{{ listing.name }}</a>
+                        <a 
+                        {% if user.is_authenticated %}
+                        href="{% url 'listing_detail' listing.id %}"
+                        {% endif %}
+                        class="hover:text-indigo-600 transition-colors duration-200">{{ listing.name }}</a>
                     </h3>
                     <p class="text-gray-600 text-sm mb-1"><strong>Price:</strong> ${{ listing.price }}</p>
                     <p class="text-gray-600 text-sm mb-1"><strong>Condition:</strong> {{ listing.condition }}</p>
                     <p class="text-gray-600 text-sm mb-1"><strong>Seller:</strong> {{ listing.seller.username }}</p>
                     {% if user.is_authenticated %}
                         <div class="text-center mt-4">
-                            <a href="{% url 'listing_detail' listing.id %}"
+                            <a
+                            href="{% url 'listing_detail' listing.id %}"
                                class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
                                 View Details
                             </a>
