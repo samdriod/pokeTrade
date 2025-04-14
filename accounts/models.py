@@ -24,19 +24,21 @@ class UserProfile(models.Model):
         return f"{self.nickname or self.user.username}'s profile"
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Create a UserProfile instance when a new User is created."""
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    """Create or update a UserProfile instance when a User is saved."""
     if created:
-        UserProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """Ensure the UserProfile is saved when the User is saved."""
-    try:
-        instance.userprofile.save()
-    except UserProfile.DoesNotExist:
-        # Create profile if it doesn't exist
-        UserProfile.objects.create(user=instance)
+        # Create new profile
+        UserProfile.objects.create(
+            user=instance,
+            birth_date=getattr(instance, '_birth_date', None),
+            gender=getattr(instance, '_gender', '')
+        )
+    elif hasattr(instance, '_birth_date'):
+        # Update existing profile
+        profile = instance.userprofile
+        profile.birth_date = instance._birth_date
+        profile.gender = instance._gender
+        profile.save()
 
 class PokemonCard(models.Model):
     # Card identification
