@@ -1,6 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from .models import Listing
+from offers.models import Offer
 
 def listing_list(request):
     listings = Listing.objects.filter(status='active').order_by('name')
@@ -8,4 +10,25 @@ def listing_list(request):
 
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, id=listing_id)
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "Please log in to make an offer.")
+            return redirect('login')
+        if request.user == listing.seller:
+            messages.error(request, "You cannot make an offer on your own listing.")
+            return redirect('listing_detail', listing_id=listing_id)
+        try:
+            amount = float(request.POST.get('amount'))
+            if amount <= 0:
+                raise ValueError("Offer amount must be positive.")
+            Offer.objects.create(
+                listing=listing,
+                buyer=request.user,
+                amount=amount,
+                status='pending'
+            )
+            messages.success(request, "Offer submitted successfully!")
+            return redirect('listing_detail', listing_id=listing_id)
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid offer amount.")
     return render(request, 'listings/listing_detail.html', {'listing': listing})
