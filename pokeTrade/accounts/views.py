@@ -12,7 +12,7 @@ def register(request):
             user = form.save()
             login(request, user)
             messages.success(request, 'Account created successfully!')
-            return redirect('profile')
+            return redirect('accounts:profile')
     else:
         form = UserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -32,5 +32,5 @@ def edit_profile(request):
         user_profile.location = request.POST.get('location', '')
         user_profile.save()
         messages.success(request, 'Profile updated successfully!')
-        return redirect('profile')
+        return redirect('accounts:profile')
     return render(request, 'accounts/edit_profile.html') 
