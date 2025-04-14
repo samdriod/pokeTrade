@@ -1,68 +1,64 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Profile Info -->
-    <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
-        <h2 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">{{ profile.nickname|default:user.username }}'s Profile</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-                <p class="text-gray-700"><strong>Username:</strong> {{ user.username }}</p>
-                <p class="text-gray-700"><strong>Nickname:</strong> {{ profile.nickname|default:"Not set" }}</p>
-                <p class="text-gray-700"><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
-                <p class="text-gray-700"><strong>Birth Date:</strong> {{ profile.birth_date|date:"F j, Y"|default:"Not provided" }}</p>
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Profile Info -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-2xl font-bold mb-4">{{ profile.nickname|default:user.username }}'s Profile</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600"><strong>Username:</strong> {{ user.username }}</p>
+                    <p class="text-gray-600"><strong>Nickname:</strong> {{ profile.nickname|default:"Not set" }}</p>
+                    <p class="text-gray-600"><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
+                    <p class="text-gray-600"><strong>Birth Date:</strong> {{ profile.birth_date|date:"F j, Y"|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600"><strong>Gender:</strong> {{ profile.get_gender_display|default:"Prefer not to say" }}</p>
+                    <p class="text-gray-600"><strong>Location:</strong> {{ profile.location|default:"Not specified" }}</p>
+                    <p class="text-gray-600"><strong>Bio:</strong> {{ profile.bio|default:"No bio provided" }}</p>
+                    <p class="text-gray-600"><strong>Trades Completed:</strong> {{ profile.trades_completed }}</p>
+                </div>
             </div>
-            <div>
-                <p class="text-gray-700"><strong>Gender:</strong> {{ profile.get_gender_display|default:"Prefer not to say" }}</p>
-                <p class="text-gray-700"><strong>Location:</strong> {{ profile.location|default:"Not specified" }}</p>
-                <p class="text-gray-700"><strong>Bio:</strong> {{ profile.bio|default:"No bio provided" }}</p>
-                <p class="text-gray-700"><strong>Trades Completed:</strong> {{ profile.trades_completed }}</p>
+            <div class="mt-4">
+                <a href="{% url 'accounts:edit_profile' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Edit Profile</a>
             </div>
         </div>
-        <div class="mt-6 text-center">
-            <a href="{% url 'accounts:edit_profile' %}" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
-                Edit Profile
-            </a>
+        <!-- My Listings -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="text-xl font-semibold mb-4">My Listings</h3>
+            {% if user.listings.all %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for listing in user.listings.all %}
+                        <div class="border p-4 rounded">
+                            <h4 class="text-lg font-medium">{{ listing.name }}</h4>
+                            <p class="text-gray-600">Price: ${{ listing.price }}</p>
+                            <p class="text-gray-600">Condition: {{ listing.condition }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No listings yet.</p>
+            {% endif %}
+        </div>
+        <!-- My Offers -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-4">My Offers</h3>
+            {% if offers %}
+                <div class="space-y-4">
+                    {% for offer in offers %}
+                        <div class="border p-4 rounded">
+                            <h4 class="text-lg font-medium">
+                                <a href="{% url 'listing_detail' offer.listing.id %}" class="hover:underline">{{ offer.listing.name }}</a>
+                            </h4>
+                            <p class="text-gray-600">Offered: ${{ offer.amount }}</p>
+                            <p class="text-gray-600">Status: {{ offer.get_status_display }}</p>
+                            <p class="text-gray-600">Made on: {{ offer.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">You haven't made any offers yet.</p>
+            {% endif %}
         </div>
     </div>
-
-    <!-- My Listings -->
-    <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
-        <h3 class="text-2xl font-semibold text-gray-900 mb-6">My Listings</h3>
-        {% if user.listings.all %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for listing in user.listings.all %}
-                    <div class="border p-6 rounded-lg shadow hover:shadow-md transition-shadow duration-300">
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">{{ listing.name }}</h4>
-                        <p class="text-gray-600"><strong>Price:</strong> ${{ listing.price }}</p>
-                        <p class="text-gray-600"><strong>Condition:</strong> {{ listing.condition }}</p>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-gray-500">No listings yet.</p>
-        {% endif %}
-    </div>
-
-    <!-- My Offers -->
-    <div class="bg-white p-8 rounded-lg shadow-lg">
-        <h3 class="text-2xl font-semibold text-gray-900 mb-6">My Offers</h3>
-        {% if offers %}
-            <div class="space-y-6">
-                {% for offer in offers %}
-                    <div class="border p-6 rounded-lg shadow hover:shadow-md transition-shadow duration-300">
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">
-                            <a href="{% url 'listing_detail' offer.listing.id %}" class="hover:text-indigo-600 transition-colors duration-200">{{ offer.listing.name }}</a>
-                        </h4>
-                        <p class="text-gray-600"><strong>Offered:</strong> ${{ offer.amount }}</p>
-                        <p class="text-gray-600"><strong>Status:</strong> {{ offer.get_status_display }}</p>
-                        <p class="text-gray-600"><strong>Made on:</strong> {{ offer.created_at|date:"F j, Y, g:i a" }}</p>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-gray-500">No offers made yet.</p>
-        {% endif %}
-    </div>
-</div>
 {% endblock %}
