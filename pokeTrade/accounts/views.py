@@ -11,32 +11,42 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Create UserProfile
-            UserProfile.objects.create(
-                user=user,
-                birth_date=form.cleaned_data['birth_date'],
-                gender=form.cleaned_data['gender']
-            )
+            # Update the automatically created profile
+            user.userprofile.birth_date = form.cleaned_data['birth_date']
+            user.userprofile.gender = form.cleaned_data['gender']
+            user.userprofile.save()
             login(request, user)
-            return redirect('accounts:profile')  # Redirect to profile page after registration
+            return redirect('accounts:profile')
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
 @login_required
 def profile(request):
-    user_profile = request.user.userprofile
     return render(request, 'accounts/profile.html', {
-        'profile': user_profile
+        'profile': request.user.userprofile
     })
 
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        user_profile = request.user.userprofile
-        user_profile.bio = request.POST.get('bio', '')
-        user_profile.location = request.POST.get('location', '')
-        user_profile.save()
+        user = request.user
+        profile = user.userprofile
+
+        # Update user email
+        user.email = request.POST.get('email', '')
+        user.save()
+
+        # Update profile fields
+        profile.birth_date = request.POST.get('birth_date') or None
+        profile.gender = request.POST.get('gender', '')
+        profile.location = request.POST.get('location', '')
+        profile.bio = request.POST.get('bio', '')
+        profile.save()
+
         messages.success(request, 'Profile updated successfully!')
         return redirect('accounts:profile')
-    return render(request, 'accounts/edit_profile.html') 
+
+    return render(request, 'accounts/edit_profile.html', {
+        'profile': request.user.userprofile
+    }) 
