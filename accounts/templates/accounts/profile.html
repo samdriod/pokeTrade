@@ -1,89 +1,64 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Profile Info Card -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:px-6">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                {{ profile.nickname|default:user.username }}'s Profile
-            </h2>
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Profile Info -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-2xl font-bold mb-4">{{ profile.nickname|default:user.username }}'s Profile</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600"><strong>Username:</strong> {{ user.username }}</p>
+                    <p class="text-gray-600"><strong>Nickname:</strong> {{ profile.nickname|default:"Not set" }}</p>
+                    <p class="text-gray-600"><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
+                    <p class="text-gray-600"><strong>Birth Date:</strong> {{ profile.birth_date|date:"F j, Y"|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600"><strong>Gender:</strong> {{ profile.get_gender_display|default:"Prefer not to say" }}</p>
+                    <p class="text-gray-600"><strong>Location:</strong> {{ profile.location|default:"Not specified" }}</p>
+                    <p class="text-gray-600"><strong>Bio:</strong> {{ profile.bio|default:"No bio provided" }}</p>
+                    <p class="text-gray-600"><strong>Trades Completed:</strong> {{ profile.trades_completed }}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'accounts:edit_profile' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Edit Profile</a>
+            </div>
         </div>
-        <div class="border-t border-gray-200">
-            <dl>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Username</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ user.username }}</dd>
+        <!-- My Listings -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="text-xl font-semibold mb-4">My Listings</h3>
+            {% if user.listings.all %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for listing in user.listings.all %}
+                        <div class="border p-4 rounded">
+                            <h4 class="text-lg font-medium">{{ listing.name }}</h4>
+                            <p class="text-gray-600">Price: ${{ listing.price }}</p>
+                            <p class="text-gray-600">Condition: {{ listing.condition }}</p>
+                        </div>
+                    {% endfor %}
                 </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Nickname</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.nickname|default:"Not set" }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Email</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ user.email|default:"Not provided" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Birth Date</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.birth_date|date:"F j, Y"|default:"Not provided" }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Gender</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.get_gender_display|default:"Prefer not to say" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Location</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.location|default:"Not specified" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Bio</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.bio|default:"No bio provided" }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Trades Completed</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.trades_completed }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Reputation Score</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ profile.reputation_score }}</dd>
-                </div>
-            </dl>
+            {% else %}
+                <p class="text-gray-500">No listings yet.</p>
+            {% endif %}
         </div>
-        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-            <a href="{% url 'accounts:edit_profile' %}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Edit Profile
-            </a>
-        </div>
-    </div>
-
-    <!-- Trading Dashboard -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <!-- Tabs -->
-        <div class="border-b border-gray-200">
-            <nav class="flex" aria-label="Tabs">
-                <button class="text-indigo-600 px-6 py-4 font-medium text-sm border-b-2 border-indigo-600">
-                    <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Listed for Trade
-                </button>
-                <button class="text-gray-500 hover:text-gray-700 px-6 py-4 font-medium text-sm border-b-2 border-transparent">
-                    <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                    Wishlist
-                </button>
-            </nav>
-        </div>
-
-        <!-- Content Area -->
-        <div class="px-4 py-12 text-center">
-            <h3 class="text-xl font-medium text-gray-900 mb-2">Add cards to your profile to start trading.</h3>
-            <p class="text-gray-500 mb-6">Let other trainers know what you have and what you need for a smooth PokeTrade experience.</p>
-            <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                ADD CARDS
-            </button>
+        <!-- My Offers -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-4">My Offers</h3>
+            {% if offers %}
+                <div class="space-y-4">
+                    {% for offer in offers %}
+                        <div class="border p-4 rounded">
+                            <h4 class="text-lg font-medium">
+                                <a href="{% url 'listing_detail' offer.listing.id %}" class="hover:underline">{{ offer.listing.name }}</a>
+                            </h4>
+                            <p class="text-gray-600">Offered: ${{ offer.amount }}</p>
+                            <p class="text-gray-600">Status: {{ offer.get_status_display }}</p>
+                            <p class="text-gray-600">Made on: {{ offer.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">You haven't made any offers yet.</p>
+            {% endif %}
         </div>
     </div>
-</div>
-{% endblock %} 
+{% endblock %}
