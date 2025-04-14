@@ -8,20 +8,40 @@ from .forms import CustomUserCreationForm, UserProfileForm
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect('accounts:profile')  # Add namespace
+        return redirect('accounts:profile')
         
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Update the automatically created profile
-            user.userprofile.birth_date = form.cleaned_data['birth_date']
-            user.userprofile.gender = form.cleaned_data['gender']
-            user.userprofile.save()
-            login(request, user)
-            return redirect('accounts:profile')  # Add namespace
+            try:
+                # Create the user first
+                user = form.save()
+                
+                # Get or create the profile
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                
+                # Update profile fields from form
+                profile.birth_date = form.cleaned_data.get('birth_date')
+                profile.gender = form.cleaned_data.get('gender')
+                if form.cleaned_data.get('email'):
+                    user.email = form.cleaned_data.get('email')
+                    user.save()
+                
+                # Save the profile
+                profile.save()
+                
+                # Log the user in
+                login(request, user)
+                messages.success(request, 'Account created successfully!')
+                return redirect('accounts:profile')
+            except Exception as e:
+                messages.error(request, f'Error creating account: {str(e)}')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
     else:
         form = CustomUserCreationForm()
+    
     return render(request, 'accounts/register.html', {'form': form})
 
 @login_required

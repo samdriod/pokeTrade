@@ -11,16 +11,36 @@
             <div class="rounded-md shadow-sm -space-y-px">
                 {% for field in form %}
                     <div class="mb-4">
-                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ field.label }}
+                            {% if field.field.required %}*{% endif %}
+                        </label>
                         <div class="mt-1">
-                            {{ field.errors }}
-                            <input id="{{ field.id_for_label }}" name="{{ field.html_name }}" type="{{ field.field.widget.input_type }}" 
-                                   class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                   {% if field.field.required %}required{% endif %}>
+                            {% if field.errors %}
+                                <div class="text-red-500 text-sm mb-2">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                            {% if field.name == 'gender' %}
+                                <select name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    {% for value, label in field.field.choices %}
+                                        <option value="{{ value }}" {% if value == field.value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% elif field.name == 'birth_date' %}
+                                <input type="date" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                                       value="{{ field.value|default:'' }}">
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.help_text %}
+                                <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
+                            {% endif %}
                         </div>
-                        {% if field.help_text %}
-                            <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -30,15 +50,16 @@
                     Register
                 </button>
             </div>
+        
+            <div class="text-center">
+                <p class="mt-2 text-sm text-gray-600">
+                    Already have an account? 
+                    <a href="{% url 'accounts:login' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Login here
+                    </a>
+                </p>
+            </div>
         </form>
-        <div class="text-center">
-            <p class="mt-2 text-sm text-gray-600">
-                Already have an account? 
-                <a href="{% url 'accounts:login' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Login here
-                </a>
-            </p>
-        </div>
     </div>
 </div>
 {% endblock %} 
