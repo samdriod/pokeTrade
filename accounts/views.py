@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .models import UserProfile, PokemonCard
+from .models import UserProfile
 from .forms import CustomUserCreationForm, UserProfileForm
 
 def register(request):
@@ -62,36 +62,3 @@ def edit_profile(request):
         form = UserProfileForm(instance=request.user.userprofile)
     
     return render(request, 'accounts/edit_profile.html', {'form': form})
-
-@login_required
-def pokedex(request):
-    cards = PokemonCard.objects.all()
-    
-    # Handle search query
-    search_query = request.GET.get('search', '')
-    if search_query:
-        cards = cards.filter(name__icontains=search_query)
-    
-    # Handle filters
-    rarity = request.GET.get('rarity', '')
-    if rarity:
-        cards = cards.filter(rarity=rarity)
-        
-    type_filter = request.GET.get('type', '')
-    if type_filter:
-        cards = cards.filter(supertype=type_filter)
-    
-    # Get unique values for filter dropdowns
-    rarities = PokemonCard.objects.values_list('rarity', flat=True).distinct()
-    types = PokemonCard.objects.values_list('supertype', flat=True).distinct()
-    
-    context = {
-        'cards': cards,
-        'search_query': search_query,
-        'selected_rarity': rarity,
-        'selected_type': type_filter,
-        'rarities': rarities,
-        'types': types,
-    }
-    
-    return render(request, 'accounts/pokedex.html', context) 
