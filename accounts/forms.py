@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import UserProfile
 
 class CustomUserCreationForm(UserCreationForm):
     GENDER_CHOICES = [
@@ -31,4 +32,18 @@ class CustomUserCreationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].help_text = 'Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
-        self.fields['password1'].help_text = 'Your password must contain at least 8 characters.' 
+        self.fields['password1'].help_text = 'Your password must contain at least 8 characters.'
+
+class UserProfileForm(forms.ModelForm):
+    nickname = forms.CharField(
+        max_length=30,
+        required=False,
+        help_text='Optional. This will be displayed instead of your username.'
+    )
+    
+    class Meta:
+        model = UserProfile
+        fields = ('nickname', 'birth_date', 'gender', 'location', 'bio')
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        } 
