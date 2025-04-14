@@ -80,30 +80,62 @@ class ProfileViewTest(TestCase):
 
 class EditProfileViewTest(TestCase):
     def setUp(self):
+        # Create a test user and log them in
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client = Client()
         self.client.login(username='testuser', password='testpass')
 
+        # Update the user's profile with initial data
+        self.user.userprofile.nickname = "Initial Nickname"
+        self.user.userprofile.birth_date = date(1990, 1, 1)
+        self.user.userprofile.gender = "M"
+        self.user.userprofile.location = "Initial Location"
+        self.user.userprofile.bio = "Initial bio"
+        self.user.userprofile.save()
+
     def test_edit_profile_view_get(self):
+        # Test that the edit profile page loads correctly
         response = self.client.get(reverse('accounts:edit_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/edit_profile.html')
+        self.assertContains(response, "Edit Profile")
+        self.assertContains(response, "Initial Nickname")  # Ensure initial data is displayed
 
     def test_edit_profile_view_post(self):
+        # Test submitting updated profile data
         response = self.client.post(reverse('accounts:edit_profile'), {
             'nickname': 'Updated Nickname',
             'birth_date': '1995-05-15',
             'gender': 'F',
-            'location': 'Test Location',
+            'location': 'Updated Location',
             'bio': 'Updated bio'
         })
         self.assertEqual(response.status_code, 302)  # Redirect after successful update
+
+        # Verify that the profile was updated
         profile = UserProfile.objects.get(user=self.user)
         self.assertEqual(profile.nickname, 'Updated Nickname')
         self.assertEqual(profile.birth_date, date(1995, 5, 15))
         self.assertEqual(profile.gender, 'F')
-        self.assertEqual(profile.location, 'Test Location')
+        self.assertEqual(profile.location, 'Updated Location')
         self.assertEqual(profile.bio, 'Updated bio')
+
+    def test_edit_profile_view_invalid_data(self):
+        # Test submitting invalid data (e.g., invalid date format)
+        response = self.client.post(reverse('accounts:edit_profile'), {
+            'nickname': 'Invalid Nickname',
+            'birth_date': 'invalid-date',  # Invalid date format
+            'gender': 'F',
+            'location': 'Invalid Location',
+            'bio': 'Invalid bio'
+        })
+        self.assertEqual(response.status_code, 200)  # Page reloads with errors
+        self.assertContains(response, "Enter a valid date.")  # Check for error message
+
+        # Verify that the profile was not updated
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertEqual(profile.nickname, 'Initial Nickname')  # Should remain unchanged
+        self.assertEqual(profile.birth_date, date(1990, 1, 1))  # Should remain unchanged
 
 class PokedexViewTest(TestCase):
     def setUp(self):
