@@ -2,4 +2,8 @@
 pokeTrade/__pycache__
 accounts/__pycache__
 accounts/migrations/__pycache__
+accounts/management/__pycache__
 listings/__pycache__
+listings/migrations/__pycache__
+listings/management/__pycache__
+listings/management/commands/__pycache__
