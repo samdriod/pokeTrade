@@ -4,18 +4,24 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .models import UserProfile
+from .forms import CustomUserCreationForm
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Create UserProfile
+            UserProfile.objects.create(
+                user=user,
+                birth_date=form.cleaned_data['birth_date'],
+                gender=form.cleaned_data['gender']
+            )
             login(request, user)
-            messages.success(request, 'Account created successfully!')
-            return redirect('accounts:profile')
+            return redirect('home')  # Redirect to home page after registration
     else:
-        form = UserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+        form = CustomUserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
 
 @login_required
 def profile(request):
