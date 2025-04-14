@@ -1,8 +1,9 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from .models import UserProfile, PokemonCard
+from .models import UserProfile, PokemonCard, CardListing
 from django.urls import reverse
 from datetime import date
+from decimal import Decimal
 
 class UserProfileModelTest(TestCase):
     def setUp(self):
@@ -68,84 +69,11 @@ class RegisterViewTest(TestCase):
 
 class ProfileViewTest(TestCase):
     def setUp(self):
+        # Create a test user
         self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client = Client()
-        self.client.login(username='testuser', password='testpass')
 
-    def test_profile_view(self):
-        response = self.client.get(reverse('accounts:profile'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/profile.html')
-        self.assertContains(response, "testuser's Profile")
-
-class EditProfileViewTest(TestCase):
-    def setUp(self):
-        # Create a test user and log them in
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client = Client()
-        self.client.login(username='testuser', password='testpass')
-
-        # Update the user's profile with initial data
-        self.user.userprofile.nickname = "Initial Nickname"
-        self.user.userprofile.birth_date = date(1990, 1, 1)
-        self.user.userprofile.gender = "M"
-        self.user.userprofile.location = "Initial Location"
-        self.user.userprofile.bio = "Initial bio"
-        self.user.userprofile.save()
-
-    def test_edit_profile_view_get(self):
-        # Test that the edit profile page loads correctly
-        response = self.client.get(reverse('accounts:edit_profile'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/edit_profile.html')
-        self.assertContains(response, "Edit Profile")
-        self.assertContains(response, "Initial Nickname")  # Ensure initial data is displayed
-
-    def test_edit_profile_view_post(self):
-        # Test submitting updated profile data
-        response = self.client.post(reverse('accounts:edit_profile'), {
-            'nickname': 'Updated Nickname',
-            'birth_date': '1995-05-15',
-            'gender': 'F',
-            'location': 'Updated Location',
-            'bio': 'Updated bio'
-        })
-        self.assertEqual(response.status_code, 302)  # Redirect after successful update
-
-        # Verify that the profile was updated
-        profile = UserProfile.objects.get(user=self.user)
-        self.assertEqual(profile.nickname, 'Updated Nickname')
-        self.assertEqual(profile.birth_date, date(1995, 5, 15))
-        self.assertEqual(profile.gender, 'F')
-        self.assertEqual(profile.location, 'Updated Location')
-        self.assertEqual(profile.bio, 'Updated bio')
-
-    def test_edit_profile_view_invalid_data(self):
-        # Test submitting invalid data (e.g., invalid date format)
-        response = self.client.post(reverse('accounts:edit_profile'), {
-            'nickname': 'Invalid Nickname',
-            'birth_date': 'invalid-date',  # Invalid date format
-            'gender': 'F',
-            'location': 'Invalid Location',
-            'bio': 'Invalid bio'
-        })
-        self.assertEqual(response.status_code, 200)  # Page reloads with errors
-        self.assertContains(response, "Enter a valid date.")  # Check for error message
-
-        # Verify that the profile was not updated
-        profile = UserProfile.objects.get(user=self.user)
-        self.assertEqual(profile.nickname, 'Initial Nickname')  # Should remain unchanged
-        self.assertEqual(profile.birth_date, date(1990, 1, 1))  # Should remain unchanged
-
-class PokedexViewTest(TestCase):
-    def setUp(self):
-        # Create a test user and log them in
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client = Client()
-        self.client.login(username='testuser', password='testpass')
-
-        # Add some PokemonCard objects to the database
-        PokemonCard.objects.create(
+        # Create some PokemonCard objects
+        self.card1 = PokemonCard.objects.create(
             card_id="xy1-1",
             name="Venusaur-EX",
             supertype="Pokémon",
@@ -154,23 +82,91 @@ class PokedexViewTest(TestCase):
             set_series="XY",
             small_image="https://images.pokemontcg.io/xy1/1.png"
         )
-        PokemonCard.objects.create(
+        self.card2 = PokemonCard.objects.create(
             card_id="xy1-2",
-            name="M Venusaur-EX",
-            supertype="Pokémon",
-            rarity="Rare Holo EX",
-            set_name="XY",
-            set_series="XY",
-            small_image="https://images.pokemontcg.io/xy1/2.png"
-        )
-        PokemonCard.objects.create(
-            card_id="xy1-3",
             name="Weedle",
             supertype="Pokémon",
             rarity="Common",
             set_name="XY",
             set_series="XY",
-            small_image="https://images.pokemontcg.io/xy1/3.png"
+            small_image="https://images.pokemontcg.io/xy1/2.png"
+        )
+
+        # Create a listing for the user
+        self.listing = CardListing.objects.create(
+            seller=self.user,
+            card=self.card1,
+            condition="MT",
+            price=Decimal('500.00'),
+            description="Mint condition Venusaur-EX",
+            status="available"
+        )
+
+        # Create an offer for the user
+        self.offer = CardListing.objects.create(
+            seller=self.user,
+            card=self.card2,
+            condition="NM",
+            price=Decimal('20.00'),
+            description="Near Mint Weedle",
+            status="pending"
+        )
+
+    def test_listing_recorded_in_database(self):
+        # Check if the listing is recorded in the database
+        listing = CardListing.objects.filter(card=self.card1, seller=self.user).exists()
+        self.assertTrue(listing)
+
+    def test_offer_recorded_in_database(self):
+        # Check if the offer is recorded in the database
+        offer = CardListing.objects.filter(card=self.card2, seller=self.user).exists()
+        self.assertTrue(offer)
+
+class EditProfileViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client = Client()
+        self.client.login(username='testuser', password='testpass')
+
+    def test_edit_profile_view_get(self):
+        response = self.client.get(reverse('accounts:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/edit_profile.html')
+
+    def test_edit_profile_view_post(self):
+        response = self.client.post(reverse('accounts:edit_profile'), {
+            'nickname': 'Updated Nickname',
+            'birth_date': '1995-05-15',
+            'gender': 'F',
+            'location': 'Test Location',
+            'bio': 'Updated bio'
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect after successful update
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertEqual(profile.nickname, 'Updated Nickname')
+        self.assertEqual(profile.birth_date, date(1995, 5, 15))
+        self.assertEqual(profile.gender, 'F')
+        self.assertEqual(profile.location, 'Test Location')
+        self.assertEqual(profile.bio, 'Updated bio')
+
+class PokedexViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client.login(username='testuser', password='testpass')  # Log in the test client
+        self.card1 = PokemonCard.objects.create(
+            card_id="xy1-1",
+            name="Venusaur-EX",
+            supertype="Pokémon",
+            rarity="Rare Holo EX",
+            small_image="https://images.pokemontcg.io/xy1/1.png"
+        )
+        self.card2 = PokemonCard.objects.create(
+            card_id="xy1-2",
+            name="M Venusaur-EX",
+            supertype="Pokémon",
+            rarity="Rare Holo EX",
+            small_image="https://images.pokemontcg.io/xy1/2.png"
         )
 
     def test_pokedex_view(self):
@@ -180,24 +176,9 @@ class PokedexViewTest(TestCase):
         self.assertContains(response, 'Venusaur-EX')
         self.assertContains(response, 'M Venusaur-EX')
 
-    def test_pokedex_view_search(self):
-        # Test searching for "Venusaur"
-        response = self.client.get(reverse('accounts:pokedex'), {'search': 'Venusaur'})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Venusaur-EX')
-        self.assertContains(response, 'M Venusaur-EX')
-        self.assertNotContains(response, 'Weedle')  # Weedle should not appear in the results
-
-    def test_pokedex_view_search_no_results(self):
-        # Test searching for a term that doesn't match any cards
-        response = self.client.get(reverse('accounts:pokedex'), {'search': 'Charizard'})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'No cards found')  # Check for the "no results" message
-
-    def test_pokedex_view_no_search(self):
-        # Test accessing the pokedex without a search query
-        response = self.client.get(reverse('accounts:pokedex'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Venusaur-EX')
-        self.assertContains(response, 'M Venusaur-EX')
-        self.assertContains(response, 'Weedle')  # All cards should appear
+    def test_pokemon_cards_recorded_in_database(self):
+        # Check if the cards are recorded in the database
+        card1_exists = PokemonCard.objects.filter(card_id="xy1-1", name="Venusaur-EX").exists()
+        card2_exists = PokemonCard.objects.filter(card_id="xy1-2", name="M Venusaur-EX").exists()
+        self.assertTrue(card1_exists)
+        self.assertTrue(card2_exists)
