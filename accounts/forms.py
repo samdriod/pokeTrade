@@ -38,12 +38,28 @@ class UserProfileForm(forms.ModelForm):
     nickname = forms.CharField(
         max_length=30,
         required=False,
-        help_text='Optional. This will be displayed instead of your username.'
+        help_text='Optional. This will be displayed instead of your username.',
+        widget=forms.TextInput(attrs={
+            'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
+        })
     )
     
     class Meta:
         model = UserProfile
         fields = ('nickname', 'birth_date', 'gender', 'location', 'bio')
         widgets = {
-            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'birth_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
+            }),
+            'gender': forms.Select(attrs={
+                'class': 'mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
+            }),
+            'bio': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
+            })
         } 
